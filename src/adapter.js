@@ -30,7 +30,24 @@ class TwigAdapter extends Fractal.Adapter {
                 } else {
                     let view = isHandle(location) ? self.getView(location) : _.find(self.views, {path: Path.join(source.fullPath, location)});
                     if (!view) {
+                        /** We normalize the path @namespace/component.twig to @component.twig - author GLacourt */
+                        if (location.includes('/')) {
+                            location = location
+                                .substr(location.lastIndexOf('/'))
+                                .replace('/', self._handlePrefix);
+                        }
 
+                        /** We remove ext if exist */
+                        if (location.endsWith('.twig')) {
+                            location = location.replace('.twig', '');
+                        }
+
+                        /** We search for an occurence of our new location */
+                        view = isHandle(location) ?
+                            self.getView(location) : _.find(self.views, { path: Path.join(source.fullPath, location) });
+                    }
+
+                    if (!view) {
                         throw new Error(`Template ${location} not found`);
                     }
                     params.data = view.content;
